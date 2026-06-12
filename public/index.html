@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>即時股價追蹤</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f1;
+      --ink: #18211d;
+      --muted: #66716b;
+      --line: #d7ded7;
+      --panel: #ffffff;
+      --accent: #18745d;
+      --accent-2: #c64f32;
+      --soft: #eaf3ef;
+      --danger: #b63131;
+      --shadow: 0 14px 36px rgba(21, 35, 30, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "Noto Sans TC", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(24, 116, 93, .12), transparent 34%),
+        linear-gradient(315deg, rgba(198, 79, 50, .10), transparent 30%),
+        var(--bg);
+    }
+
+    button,
+    input,
+    select { font: inherit; }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 42px;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .status {
+      min-width: 228px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .78);
+      color: var(--muted);
+      text-align: right;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) auto;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 0 12px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(24, 116, 93, .16);
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 7px;
+      padding: 0 16px;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      transition: transform .14s ease, opacity .14s ease;
+      white-space: nowrap;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    button.secondary {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    button.icon {
+      width: 38px;
+      min-height: 38px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin: 16px 0;
+    }
+
+    .interval {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+    }
+
+    .interval select { min-width: 140px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stock-card {
+      min-height: 244px;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: var(--shadow);
+    }
+
+    .stock-card.dragging {
+      opacity: .55;
+      outline: 2px dashed var(--accent);
+    }
+
+    .card-head {
+      display: flex;
+      gap: 10px;
+      align-items: start;
+      justify-content: space-between;
+    }
+
+    .title-line {
+      min-width: 0;
+    }
+
+    .symbol {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .name {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      min-height: 20px;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .price {
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 750;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 10px;
+      border-radius: 7px;
+      background: var(--soft);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .metric strong {
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .change.up { color: #087442; }
+    .change.down { color: var(--danger); }
+
+    .message {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      min-height: 38px;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 34px 18px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .70);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 880px) {
+      header,
+      .controls,
+      .grid { grid-template-columns: 1fr; }
+
+      .status { text-align: left; }
+
+      .toolbar { align-items: stretch; }
+
+      .toolbar > *,
+      .interval { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>即時股價追蹤</h1>
+        <p class="subtitle">輸入台股或美股代號並固定追蹤即時行情。台股來源為玩股網，美股來源為 Google 財經；可拖曳卡片調整順序。</p>
+      </div>
+      <div class="status" id="status">尚未更新</div>
+    </header>
+
+    <form class="controls" id="addForm">
+      <input id="symbolInput" name="symbol" autocomplete="off" placeholder="股票代號，例如 2330 或 AAPL" required>
+      <button type="submit">＋ 加入</button>
+    </form>
+
+    <div class="toolbar">
+      <div>
+        <button id="refreshButton" type="button">↻ 立即更新</button>
+        <button class="secondary" id="exportButton" type="button">匯出 Excel</button>
+      </div>
+      <label class="interval">
+        自動更新
+        <select id="intervalSelect">
+          <option value="0">關閉</option>
+          <option value="30000">每 30 秒</option>
+          <option value="60000">每 1 分鐘</option>
+        </select>
+      </label>
+    </div>
+
+    <section class="grid" id="stockGrid" aria-live="polite"></section>
+  </main>
+
+  <script>
+    const storageKey = "wantgoo-stock-tracker-v2";
+    const intervalKey = "wantgoo-stock-tracker-interval-v2";
+    const state = {
+      stocks: JSON.parse(localStorage.getItem(storageKey) || "[]"),
+      timer: null,
+      loading: false,
+      draggedSymbol: ""
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const grid = $("#stockGrid");
+    const status = $("#status");
+    const intervalSelect = $("#intervalSelect");
+
+    function saveStocks() {
+      localStorage.setItem(storageKey, JSON.stringify(state.stocks));
+    }
+
+    function normalizeSymbol(raw) {
+      return raw.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+    }
+
+    function formatNumber(value, digits = 2) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return "－";
+      return new Intl.NumberFormat("zh-TW", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      }).format(Number(value));
+    }
+
+    function formatDateTime(value) {
+      return value || "－";
+    }
+
+    async function getQuote(symbol) {
+      const endpoint = location.protocol === "file:"
+        ? `http://127.0.0.1:8787/api/quote?symbol=${encodeURIComponent(symbol)}`
+        : `/api/quote?symbol=${encodeURIComponent(symbol)}`;
+      const response = await fetch(endpoint, { cache: "no-store" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `本機伺服器回應 ${response.status}`);
+      return payload;
+    }
+
+    function moveStock(symbol, direction) {
+      const index = state.stocks.findIndex((stock) => stock.symbol === symbol);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= state.stocks.length) return;
+      const [item] = state.stocks.splice(index, 1);
+      state.stocks.splice(target, 0, item);
+      saveStocks();
+      render();
+    }
+
+    function moveDragged(beforeSymbol) {
+      const from = state.stocks.findIndex((stock) => stock.symbol === state.draggedSymbol);
+      const to = state.stocks.findIndex((stock) => stock.symbol === beforeSymbol);
+      if (from < 0 || to < 0 || from === to) return;
+      const [item] = state.stocks.splice(from, 1);
+      state.stocks.splice(to, 0, item);
+      saveStocks();
+      render();
+    }
+
+    function render() {
+      if (!state.stocks.length) {
+        grid.innerHTML = `<div class="empty">還沒有固定追蹤的股票。先輸入台股或美股代號加入清單。</div>`;
+        return;
+      }
+
+      grid.innerHTML = state.stocks.map((stock, index) => {
+        const quote = stock.quote;
+        const changeClass = quote?.change > 0 ? "up" : quote?.change < 0 ? "down" : "";
+        const sign = quote?.change > 0 ? "+" : "";
+        const changeText = quote?.change === null || quote?.change === undefined
+          ? "－"
+          : `${sign}${formatNumber(quote.change)} (${sign}${formatNumber(quote.changePercent)}%)`;
+
+        return `
+          <article class="stock-card" draggable="true" data-symbol="${stock.symbol}">
+            <div class="card-head">
+              <div class="title-line">
+                <h2 class="symbol">${stock.symbol}</h2>
+                <div class="name">${quote?.displayName || "即時行情"}</div>
+              </div>
+              <div class="actions">
+                <button class="icon" type="button" title="往前" data-up="${stock.symbol}" ${index === 0 ? "disabled" : ""}>↑</button>
+                <button class="icon" type="button" title="往後" data-down="${stock.symbol}" ${index === state.stocks.length - 1 ? "disabled" : ""}>↓</button>
+                <button class="icon" type="button" title="移除" data-remove="${stock.symbol}">×</button>
+              </div>
+            </div>
+            <div class="price">${quote ? formatNumber(quote.price) : "更新中"}</div>
+            <div class="meta">
+              <div class="metric">
+                <span>漲跌</span>
+                <strong class="change ${changeClass}">${changeText}</strong>
+              </div>
+              <div class="metric">
+                <span>行情時間</span>
+                <strong>${quote ? formatDateTime(quote.quoteTime) : "－"}</strong>
+              </div>
+              <div class="metric">
+                <span>開盤 / 昨收</span>
+                <strong>${quote ? `${formatNumber(quote.open)} / ${formatNumber(quote.previousClose)}` : "－"}</strong>
+              </div>
+              <div class="metric">
+                <span>最高 / 最低</span>
+                <strong>${quote ? `${formatNumber(quote.high)} / ${formatNumber(quote.low)}` : "－"}</strong>
+              </div>
+            </div>
+            <div class="message">${stock.error || quote?.note || "正在等待更新。"}</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function refreshAll() {
+      if (state.loading || !state.stocks.length) return;
+      state.loading = true;
+      status.textContent = "更新中...";
+      render();
+
+      await Promise.all(state.stocks.map(async (stock) => {
+        try {
+          stock.quote = await getQuote(stock.symbol);
+          stock.error = "";
+        } catch (error) {
+          stock.error = error.message;
+        }
+      }));
+
+      state.loading = false;
+      saveStocks();
+      status.textContent = `上次更新：${new Intl.DateTimeFormat("zh-TW", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }).format(new Date())}`;
+      render();
+    }
+
+    function setIntervalTimer() {
+      if (state.timer) window.clearInterval(state.timer);
+      const ms = Number(intervalSelect.value);
+      localStorage.setItem(intervalKey, String(ms));
+      if (ms > 0) state.timer = window.setInterval(refreshAll, ms);
+    }
+
+    function escapeCell(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function exportExcel() {
+      const headers = ["排序", "代號", "名稱", "市場", "資料來源", "價格", "漲跌", "漲跌幅", "行情時間", "開盤", "昨收", "最高", "最低", "成交量", "狀態"];
+      const rows = state.stocks.map((stock, index) => {
+        const quote = stock.quote || {};
+        return [
+          index + 1,
+          stock.symbol,
+          quote.displayName || "",
+          quote.market || "",
+          quote.provider || "",
+          quote.price ?? "",
+          quote.change ?? "",
+          quote.changePercent ?? "",
+          quote.quoteTime || "",
+          quote.open ?? "",
+          quote.previousClose ?? "",
+          quote.high ?? "",
+          quote.low ?? "",
+          quote.volume ?? "",
+          stock.error || "OK"
+        ];
+      });
+
+      const table = [headers, ...rows]
+        .map((row) => `<tr>${row.map((cell) => `<td>${escapeCell(cell)}</td>`).join("")}</tr>`)
+        .join("");
+      const html = `<!doctype html><html><head><meta charset="utf-8"></head><body><table>${table}</table></body></html>`;
+      const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+      const link = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      link.href = URL.createObjectURL(blob);
+      link.download = `stock-tracker-${date}.xls`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    $("#addForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const symbol = normalizeSymbol($("#symbolInput").value);
+      if (!symbol) return;
+      if (!state.stocks.some((stock) => stock.symbol === symbol)) {
+        state.stocks.push({ symbol, quote: null, error: "" });
+      }
+      $("#symbolInput").value = "";
+      saveStocks();
+      render();
+      refreshAll();
+    });
+
+    $("#refreshButton").addEventListener("click", refreshAll);
+    $("#exportButton").addEventListener("click", exportExcel);
+
+    grid.addEventListener("click", (event) => {
+      const removeButton = event.target.closest("[data-remove]");
+      const upButton = event.target.closest("[data-up]");
+      const downButton = event.target.closest("[data-down]");
+
+      if (removeButton) {
+        state.stocks = state.stocks.filter((stock) => stock.symbol !== removeButton.dataset.remove);
+        saveStocks();
+        render();
+      }
+
+      if (upButton) moveStock(upButton.dataset.up, -1);
+      if (downButton) moveStock(downButton.dataset.down, 1);
+    });
+
+    grid.addEventListener("dragstart", (event) => {
+      const card = event.target.closest(".stock-card");
+      if (!card) return;
+      state.draggedSymbol = card.dataset.symbol;
+      card.classList.add("dragging");
+      event.dataTransfer.effectAllowed = "move";
+    });
+
+    grid.addEventListener("dragend", (event) => {
+      const card = event.target.closest(".stock-card");
+      if (card) card.classList.remove("dragging");
+      state.draggedSymbol = "";
+    });
+
+    grid.addEventListener("dragover", (event) => {
+      const card = event.target.closest(".stock-card");
+      if (!card || !state.draggedSymbol || card.dataset.symbol === state.draggedSymbol) return;
+      event.preventDefault();
+      moveDragged(card.dataset.symbol);
+    });
+
+    intervalSelect.value = localStorage.getItem(intervalKey) || "30000";
+    intervalSelect.addEventListener("change", setIntervalTimer);
+    setIntervalTimer();
+    render();
+    refreshAll();
+  </script>
+</body>
+</html>
