@@ -12,7 +12,19 @@
 - 每 30 秒或每 1 分鐘自動更新
 - 依目前排列順序匯出 Excel
 
-## 使用方式
+## 部署成可用網址
+
+這個專案需要後端 API 代抓資料，因此不適合只用 GitHub Pages。建議部署到 Vercel。
+
+1. 把整個專案上傳到 GitHub。
+2. 到 Vercel 建立新專案。
+3. 選擇這個 GitHub repository。
+4. Framework Preset 選 `Other`。
+5. 直接 Deploy。
+
+部署完成後，Vercel 會提供一個網址，打開即可使用。
+
+## 本機執行
 
 需要 Node.js 18 以上。
 
