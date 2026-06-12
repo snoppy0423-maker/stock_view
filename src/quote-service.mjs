@@ -48,7 +48,7 @@ function decodeHtml(text) {
 
 function parseGoogleNumber(value) {
   if (!value) return null;
-  const number = Number(decodeHtml(value).replace(/US\$/g, "").replace(/,/g, "").replace(/[^\d.+-]/g, ""));
+  const number = Number(decodeHtml(value).replace(/US\$/g, "").replace(/NT\$/g, "").replace(/,/g, "").replace(/[^\d.+-]/g, ""));
   return Number.isFinite(number) ? number : null;
 }
 
@@ -105,33 +105,41 @@ async function loadWantGooData() {
 }
 
 async function fetchTaiwanQuote(symbol) {
-  const data = await loadWantGooData();
-  const quote = data.quotes.get(symbol);
-  const instrument = data.instruments.get(symbol);
-  if (!quote || !instrument) throw new Error(`玩股網查無台股代號 ${symbol}`);
+  try {
+    const data = await loadWantGooData();
+    const quote = data.quotes.get(symbol);
+    const instrument = data.instruments.get(symbol);
+    if (!quote || !instrument) throw new Error(`玩股網查無台股代號 ${symbol}`);
 
-  const previousClose = quote.previousClose ?? quote.flat;
-  const change = Number.isFinite(previousClose) ? quote.close - previousClose : null;
-  const changePercent = Number.isFinite(previousClose) ? change / previousClose * 100 : null;
+    const previousClose = quote.previousClose ?? quote.flat;
+    const change = Number.isFinite(previousClose) ? quote.close - previousClose : null;
+    const changePercent = Number.isFinite(previousClose) ? change / previousClose * 100 : null;
 
-  return {
-    provider: "玩股網",
-    displayName: instrument.name,
-    market: "TW",
-    price: quote.close,
-    change,
-    changePercent,
-    quoteTime: formatTaipeiTime(quote.time),
-    open: quote.open,
-    previousClose,
-    high: quote.high,
-    low: quote.low,
-    volume: quote.volume,
-    note: "資料來源：玩股網 all-quote-info 即時行情。休市日時會顯示最近交易日資料。"
-  };
+    return {
+      provider: "玩股網",
+      displayName: instrument.name,
+      market: "TW",
+      price: quote.close,
+      change,
+      changePercent,
+      quoteTime: formatTaipeiTime(quote.time),
+      open: quote.open,
+      previousClose,
+      high: quote.high,
+      low: quote.low,
+      volume: quote.volume,
+      note: "資料來源：玩股網 all-quote-info 即時行情。休市日時會顯示最近交易日資料。"
+    };
+  } catch (error) {
+    const quote = await fetchGoogleQuoteForExchange(symbol, "TPE", "TW");
+    return {
+      ...quote,
+      note: `玩股網目前無法取得此代號，已改用 Google 財經 ${symbol}:TPE 備援。原始錯誤：${error.message}`
+    };
+  }
 }
 
-function parseGoogleFinance(symbol, exchange, html) {
+function parseGoogleFinance(symbol, exchange, html, market = "US") {
   const canonical = `quote/${symbol}:${exchange}`;
   if (!html.includes(canonical) && !html.includes(`["${symbol}","${exchange}"]`)) {
     throw new Error("頁面不符合指定代號");
@@ -147,7 +155,7 @@ function parseGoogleFinance(symbol, exchange, html) {
 
   const rowPattern = /\[\[(\d{4}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2}),null,null,\[(-?\d+)\]\],\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),2,2,3\],(\d+)\]/g;
   const rows = [...html.matchAll(rowPattern)];
-  if (!rows.length) return parseGoogleSummary(symbol, exchange, html, displayName);
+  if (!rows.length) return parseGoogleSummary(symbol, exchange, html, displayName, market);
 
   const last = rows.reduce((latest, row) => {
     const currentTime = Date.UTC(Number(row[1]), Number(row[2]) - 1, Number(row[3]), Number(row[4]), Number(row[5]));
@@ -163,8 +171,8 @@ function parseGoogleFinance(symbol, exchange, html) {
 
   return {
     provider: "Google 財經",
-    displayName: `${displayName} / 美股`,
-    market: "US",
+    displayName: `${displayName} / ${market === "TW" ? "台股" : "美股"}`,
+    market,
     price: numericPrice,
     change: numericChange,
     changePercent: Number.isFinite(numericRatio) ? numericRatio * 100 : null,
@@ -174,15 +182,15 @@ function parseGoogleFinance(symbol, exchange, html) {
     high: null,
     low: null,
     volume: Number(volume),
-    note: `資料來源：Google 財經 ${symbol}:${exchange}。美股時間顯示為美東時間。`
+    note: `資料來源：Google 財經 ${symbol}:${exchange}。`
   };
 }
 
-function parseGoogleSummary(symbol, exchange, html, displayName) {
-  const timeMatch = html.match(/<div class="jZZ2de">([^<]+?)&nbsp;\s*&middot;\s*&nbsp;\s*USD<\/div>/);
+function parseGoogleSummary(symbol, exchange, html, displayName, market = "US") {
+  const timeMatch = html.match(/<div class="jZZ2de">([^<]+?)&nbsp;\s*&middot;\s*&nbsp;\s*(?:USD|TWD|NT\$)<\/div>/);
   const timeIndex = timeMatch ? html.indexOf(timeMatch[0]) : -1;
   const block = timeIndex >= 0 ? html.slice(Math.max(0, timeIndex - 1600), timeIndex + timeMatch[0].length) : html;
-  const priceMatch = block.match(/<span jsname="Pdsbrc"[^>]*>\s*<span>(US\$[^<]+)<\/span>/);
+  const priceMatch = block.match(/<span jsname="Pdsbrc"[^>]*>\s*<span>((?:US\$|NT\$|[\d,.])[^<]+)<\/span>/);
   const percentMatch = block.match(/<span jsname="vY9t3b"[^>]*>\s*<span[^>]*>([-+]?[\d,.]+)%<\/span>/);
   const changeMatch = block.match(/<span jsname="xnruHf"[^>]*>\s*<span>([-+]?[\d,.]+)<\/span>/);
 
@@ -195,8 +203,8 @@ function parseGoogleSummary(symbol, exchange, html, displayName) {
 
   return {
     provider: "Google 財經",
-    displayName: `${displayName} / 美股`,
-    market: "US",
+    displayName: `${displayName} / ${market === "TW" ? "台股" : "美股"}`,
+    market,
     price,
     change,
     changePercent,
@@ -210,7 +218,7 @@ function parseGoogleSummary(symbol, exchange, html, displayName) {
   };
 }
 
-async function fetchGoogleQuoteForExchange(symbol, exchange) {
+async function fetchGoogleQuoteForExchange(symbol, exchange, market = "US") {
   const cacheKey = `${symbol}:${exchange}`;
   const cached = googleCache.get(cacheKey);
   const now = Date.now();
@@ -221,7 +229,7 @@ async function fetchGoogleQuoteForExchange(symbol, exchange) {
     "accept-language": "zh-TW,zh;q=0.9,en;q=0.8",
     "user-agent": "Mozilla/5.0 stock-tracker"
   });
-  const quote = parseGoogleFinance(symbol, exchange, html);
+  const quote = parseGoogleFinance(symbol, exchange, html, market);
   googleCache.set(cacheKey, { at: now, quote });
   return quote;
 }
@@ -231,7 +239,7 @@ async function fetchUsQuote(symbol) {
   const errors = [];
   for (const exchange of exchanges) {
     try {
-      return await fetchGoogleQuoteForExchange(symbol, exchange);
+      return await fetchGoogleQuoteForExchange(symbol, exchange, "US");
     } catch (error) {
       errors.push(`${exchange}: ${error.message}`);
     }
