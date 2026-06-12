@@ -12,10 +12,11 @@
 - 可用上下按鈕調整順序
 - 可設定每 30 秒或每 1 分鐘自動更新
 - 可依照目前排列順序匯出 Excel
+- 股票清單與排列順序會存到伺服器，其他電腦開同一個網址也會看到同一份清單
 
 ## Render 部署
 
-這個專案需要後端 API 抓取 Google 財經資料，因此不能只用 GitHub Pages。
+這個專案需要後端 API 抓取 Google 財經資料，也需要後端保存共用清單，因此不能只用 GitHub Pages。
 
 1. 將整個專案上傳到 GitHub repository
 2. 到 Render 建立 Web Service
@@ -35,6 +36,12 @@ npm start
 6. Instance Type 可以選 Free
 
 部署完成後，Render 會提供一個可以直接開啟的網址。
+
+## 共用清單說明
+
+Render 版本會把股票清單存到伺服器的 `data/watchlist.json`。同一個 Render 網址下，其他電腦或手機打開後會看到同一份清單與排序。
+
+注意：Render 免費方案的檔案系統在重新部署或服務重啟後可能會回到初始狀態。如果你之後需要永久資料庫，可以再接 Supabase、Firebase 或其他資料庫。
 
 ## 本機執行
 
