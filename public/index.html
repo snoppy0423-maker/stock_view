@@ -423,14 +423,13 @@
       await saveWatchlist();
     }
 
-    async function moveDragged(beforeSymbol) {
+    function moveDragged(beforeSymbol) {
       const from = state.stocks.findIndex((stock) => stock.symbol === state.draggedSymbol);
       const to = state.stocks.findIndex((stock) => stock.symbol === beforeSymbol);
       if (from < 0 || to < 0 || from === to) return;
       const [item] = state.stocks.splice(from, 1);
       state.stocks.splice(to, 0, item);
       render();
-      await saveWatchlist();
     }
 
     function render() {
@@ -590,10 +589,11 @@
       event.dataTransfer.effectAllowed = "move";
     });
 
-    grid.addEventListener("dragend", (event) => {
+    grid.addEventListener("dragend", async (event) => {
       const card = event.target.closest(".stock-card");
       if (card) card.classList.remove("dragging");
       state.draggedSymbol = "";
+      await saveWatchlist();
     });
 
     grid.addEventListener("dragover", (event) => {

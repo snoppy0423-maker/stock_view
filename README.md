@@ -1,6 +1,6 @@
 # 即時股價追蹤
 
-這是一個可部署到 Render 或 Vercel 的股價追蹤網頁。
+這是一個可部署到 Render 的股價追蹤網頁。
 
 ## 功能
 
@@ -12,36 +12,46 @@
 - 可用上下按鈕調整順序
 - 可設定每 30 秒或每 1 分鐘自動更新
 - 可依照目前排列順序匯出 Excel
-- 股票清單與排列順序會存到伺服器，其他電腦開同一個網址也會看到同一份清單
+- 股票清單與排列順序可永久儲存到 GitHub repo
+
+## 為什麼隔天清單會消失
+
+上一版把清單寫在 Render 伺服器的 `data/watchlist.json`。Render 免費環境可能會休眠、重啟或重新部署，執行期間寫入的檔案可能被還原，所以隔天打開時清單會消失。
+
+這一版新增 GitHub 永久儲存模式：清單會寫回你的 GitHub repo，所以 Render 重啟後也能重新讀回來。
 
 ## Render 部署
 
-這個專案需要後端 API 抓取 Google 財經資料，也需要後端保存共用清單，因此不能只用 GitHub Pages。
-
 1. 將整個專案上傳到 GitHub repository
 2. 到 Render 建立 Web Service
-3. 選擇你的 GitHub repository
-4. Build Command 填入：
+3. Build Command 填入：
 
 ```bash
 npm install
 ```
 
-5. Start Command 填入：
+4. Start Command 填入：
 
 ```bash
 npm start
 ```
 
-6. Instance Type 可以選 Free
+5. Instance Type 可以選 Free
 
-部署完成後，Render 會提供一個可以直接開啟的網址。
+## 啟用永久儲存
 
-## 共用清單說明
+到 Render 的 Environment 設定以下環境變數：
 
-Render 版本會把股票清單存到伺服器的 `data/watchlist.json`。同一個 Render 網址下，其他電腦或手機打開後會看到同一份清單與排序。
+```text
+GITHUB_TOKEN=你的 GitHub fine-grained token
+WATCHLIST_GITHUB_REPO=snoppy0423-maker/stock_view
+WATCHLIST_GITHUB_BRANCH=main
+WATCHLIST_GITHUB_PATH=data/watchlist.json
+```
 
-注意：Render 免費方案的檔案系統在重新部署或服務重啟後可能會回到初始狀態。如果你之後需要永久資料庫，可以再接 Supabase、Firebase 或其他資料庫。
+`GITHUB_TOKEN` 需要有這個 repo 的 Contents 讀寫權限。建議使用 GitHub fine-grained personal access token，只授權 `snoppy0423-maker/stock_view` 這個 repo，權限選 `Contents: Read and write`。
+
+如果沒有設定 `GITHUB_TOKEN`，程式仍可使用，但會退回 Render 暫存檔案模式，隔天或重啟後仍可能消失。
 
 ## 本機執行
 
