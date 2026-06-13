@@ -322,6 +322,22 @@
 
     const storageKey = "stock-tracker-shared-fallback-v1";
     const intervalKey = "stock-tracker-interval-v3";
+    const fixedSymbols = [
+      "00662",
+      "00646",
+      "0050",
+      "006208",
+      "00692",
+      "0056",
+      "00878",
+      "00850",
+      "00713",
+      "VT",
+      "VOO",
+      "VTI",
+      "BND"
+    ];
+    const fixedSymbolSet = new Set(fixedSymbols);
     const state = {
       stocks: [],
       timer: null,
@@ -345,7 +361,7 @@
 
     function setStocks(items) {
       const seen = new Set();
-      state.stocks = (Array.isArray(items) ? items : [])
+      state.stocks = [...fixedSymbols, ...(Array.isArray(items) ? items : [])]
         .map((item) => ({ symbol: normalizeSymbol(item.symbol || item), quote: null, error: "" }))
         .filter((item) => {
           if (!item.symbol || seen.has(item.symbol)) return false;
@@ -456,7 +472,7 @@
               <div class="actions">
                 <button class="icon" type="button" title="Move up" data-up="${stock.symbol}" ${index === 0 ? "disabled" : ""}>↑</button>
                 <button class="icon" type="button" title="Move down" data-down="${stock.symbol}" ${index === state.stocks.length - 1 ? "disabled" : ""}>↓</button>
-                <button class="icon" type="button" title="Remove" data-remove="${stock.symbol}">×</button>
+                <button class="icon" type="button" title="Remove" data-remove="${stock.symbol}" ${fixedSymbolSet.has(stock.symbol) ? "disabled" : ""}>×</button>
               </div>
             </div>
             <div class="price">${quote ? formatNumber(quote.price) : TEXT.loadingQuote}</div>
@@ -572,6 +588,7 @@
       const downButton = event.target.closest("[data-down]");
 
       if (removeButton) {
+        if (fixedSymbolSet.has(removeButton.dataset.remove)) return;
         state.stocks = state.stocks.filter((stock) => stock.symbol !== removeButton.dataset.remove);
         render();
         await saveWatchlist();

@@ -10,13 +10,28 @@ const githubToken = process.env.GITHUB_TOKEN || process.env.WATCHLIST_GITHUB_TOK
 const githubRepo = process.env.WATCHLIST_GITHUB_REPO || process.env.GITHUB_REPOSITORY || "";
 const githubBranch = process.env.WATCHLIST_GITHUB_BRANCH || "main";
 const githubPath = process.env.WATCHLIST_GITHUB_PATH || "data/watchlist.json";
+const defaultSymbols = [
+  "00662",
+  "00646",
+  "0050",
+  "006208",
+  "00692",
+  "0056",
+  "00878",
+  "00850",
+  "00713",
+  "VT",
+  "VOO",
+  "VTI",
+  "BND"
+];
 
 function normalizeItems(items) {
-  if (!Array.isArray(items)) return [];
+  const source = Array.isArray(items) ? items : [];
   const seen = new Set();
   const normalized = [];
 
-  for (const item of items) {
+  for (const item of [...defaultSymbols, ...source]) {
     const symbol = String(item?.symbol || item || "")
       .trim()
       .toUpperCase()

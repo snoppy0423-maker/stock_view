@@ -1,4 +1,18 @@
 {
-  "updatedAt": "",
-  "stocks": []
+  "updatedAt": "2026-06-14T00:00:00.000Z",
+  "stocks": [
+    { "symbol": "00662" },
+    { "symbol": "00646" },
+    { "symbol": "0050" },
+    { "symbol": "006208" },
+    { "symbol": "00692" },
+    { "symbol": "0056" },
+    { "symbol": "00878" },
+    { "symbol": "00850" },
+    { "symbol": "00713" },
+    { "symbol": "VT" },
+    { "symbol": "VOO" },
+    { "symbol": "VTI" },
+    { "symbol": "BND" }
+  ]
 }

@@ -4,21 +4,44 @@
 
 ## 功能
 
-- 支援台股，例如 `0056`、`2330`
-- 支援美股，例如 `AAPL`、`VT`、`VOO`
 - 台股與美股資料來源皆為 Google 財經
 - 不支援港股
+- 固定顯示 13 檔預設股票
+- 可繼續新增其他台股或美股
 - 可拖曳卡片調整順序
 - 可用上下按鈕調整順序
 - 可設定每 30 秒或每 1 分鐘自動更新
 - 可依照目前排列順序匯出 Excel
-- 股票清單與排列順序可永久儲存到 GitHub repo
 
-## 為什麼隔天清單會消失
+## 固定顯示清單
 
-上一版把清單寫在 Render 伺服器的 `data/watchlist.json`。Render 免費環境可能會休眠、重啟或重新部署，執行期間寫入的檔案可能被還原，所以隔天打開時清單會消失。
+固定清單會自動顯示在網頁上，不需要另外儲存：
 
-這一版新增 GitHub 永久儲存模式：清單會寫回你的 GitHub repo，所以 Render 重啟後也能重新讀回來。
+```text
+00662
+00646
+0050
+006208
+00692
+0056
+00878
+00850
+00713
+VT
+VOO
+VTI
+BND
+```
+
+固定清單不能刪除。後續新增的股票會接在固定清單後面。
+
+## 關於儲存
+
+之前清單隔天消失，是因為 Render 免費環境的本機檔案可能在休眠、重啟或重新部署後被還原。
+
+這一版已把主要清單做成內建固定清單，所以就算沒有設定 GitHub Token，打開網頁也一定會顯示上面的 13 檔。
+
+如果你希望「後續自行新增的股票」也跨裝置並永久保存，可以在 Render 設定 GitHub 儲存。
 
 ## Render 部署
 
@@ -38,7 +61,7 @@ npm start
 
 5. Instance Type 可以選 Free
 
-## 啟用永久儲存
+## 可選：啟用後續新增股票的永久儲存
 
 到 Render 的 Environment 設定以下環境變數：
 
@@ -49,9 +72,7 @@ WATCHLIST_GITHUB_BRANCH=main
 WATCHLIST_GITHUB_PATH=data/watchlist.json
 ```
 
-`GITHUB_TOKEN` 需要有這個 repo 的 Contents 讀寫權限。建議使用 GitHub fine-grained personal access token，只授權 `snoppy0423-maker/stock_view` 這個 repo，權限選 `Contents: Read and write`。
-
-如果沒有設定 `GITHUB_TOKEN`，程式仍可使用，但會退回 Render 暫存檔案模式，隔天或重啟後仍可能消失。
+`GITHUB_TOKEN` 需要有這個 repo 的 `Contents: Read and write` 權限。沒有設定也可以使用，只是後續自行新增的股票可能會因 Render 重啟而消失；固定 13 檔不會消失。
 
 ## 本機執行
 
