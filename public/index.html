@@ -293,8 +293,8 @@
         &#33258;&#21205;&#26356;&#26032;
         <select id="intervalSelect">
           <option value="0">&#38364;&#38281;</option>
-          <option value="30000">&#27599; 30 &#31186;</option>
-          <option value="60000">&#27599; 1 &#20998;&#37912;</option>
+          <option value="10000">&#27599; 10 &#31186;</option>
+          <option value="20000">&#27599; 20 &#31186;</option>
         </select>
       </label>
     </div>
@@ -321,7 +321,7 @@
     };
 
     const storageKey = "stock-tracker-shared-fallback-v1";
-    const intervalKey = "stock-tracker-interval-v3";
+    const intervalKey = "stock-tracker-interval-v4";
     const fixedSymbols = [
       "00662",
       "00646",
@@ -374,6 +374,14 @@
       return state.stocks.map((stock) => ({ symbol: stock.symbol }));
     }
 
+    function readLocalFallback() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
     function saveLocalFallback() {
       localStorage.setItem(storageKey, JSON.stringify(stockPayload()));
     }
@@ -383,11 +391,11 @@
         const response = await fetch(apiPath("/api/watchlist"), { cache: "no-store" });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || response.status);
-        setStocks(payload.stocks || []);
+        setStocks([...(payload.stocks || []), ...readLocalFallback()]);
         state.sharedReady = true;
         saveLocalFallback();
       } catch {
-        setStocks(JSON.parse(localStorage.getItem(storageKey) || "[]"));
+        setStocks(readLocalFallback());
         state.sharedReady = false;
         status.textContent = TEXT.localOnly;
       }
@@ -621,7 +629,8 @@
     });
 
     async function init() {
-      intervalSelect.value = localStorage.getItem(intervalKey) || "30000";
+      const savedInterval = localStorage.getItem(intervalKey);
+      intervalSelect.value = savedInterval === "20000" ? "20000" : "10000";
       intervalSelect.addEventListener("change", setIntervalTimer);
       await loadWatchlist();
       setIntervalTimer();

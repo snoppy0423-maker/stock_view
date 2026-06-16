@@ -1,4 +1,4 @@
-const cacheMs = 25_000;
+const cacheMs = 8_000;
 const googleCache = new Map();
 
 const TEXT = {
