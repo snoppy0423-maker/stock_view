@@ -80,10 +80,14 @@ function makeQuote({ symbol, exchange, market, displayName, price, change, chang
 }
 
 function parseGoogleSummary(symbol, exchange, html, displayName, market) {
-  const timeMatch = html.match(/<div class="jZZ2de">([^<]+?)&nbsp;\s*&middot;\s*&nbsp;\s*(?:USD|TWD|NT\$)<\/div>/);
-  const timeIndex = timeMatch ? html.indexOf(timeMatch[0]) : -1;
-  const block = timeIndex >= 0 ? html.slice(Math.max(0, timeIndex - 2200), timeIndex + timeMatch[0].length) : html;
-  const priceMatch = block.match(/<span jsname="Pdsbrc"[^>]*>\s*<span>((?:US\$|NT\$|[\d,.])[^<]+)<\/span>/);
+  const mainEnd = html.indexOf('jsname="MttRe"');
+  const mainHtml = mainEnd > 0 ? html.slice(0, mainEnd) : html;
+  const timeMatches = [...mainHtml.matchAll(/<div class="jZZ2de">([^<]+?)&nbsp;\s*&middot;\s*&nbsp;\s*(?:USD|TWD|NT\$)<\/div>/g)];
+  const timeMatch = timeMatches.at(-1);
+  const timeIndex = timeMatch ? timeMatch.index : -1;
+  const block = timeIndex >= 0 ? mainHtml.slice(Math.max(0, timeIndex - 2600), timeIndex + timeMatch[0].length) : mainHtml;
+  const priceMatches = [...block.matchAll(/<span jsname="Pdsbrc"[^>]*>\s*<span>((?:US\$|NT\$|\$|[\d,.])[^<]+)<\/span>/g)];
+  const priceMatch = priceMatches.at(-1);
   const changeMatch = block.match(/<span jsname="xnruHf"[^>]*>\s*<span>([-+]?[\d,.]+)<\/span>/);
   const percentMatch = block.match(/<span jsname="vY9t3b"[^>]*>\s*<span[^>]*>([-+]?[\d,.]+)%<\/span>/);
   const price = parseGoogleNumber(priceMatch?.[1]);
@@ -168,7 +172,7 @@ async function fetchGoogleQuoteForExchange(symbol, exchange, market) {
   const now = Date.now();
   if (cacheMs > 0 && cached && now - cached.at < cacheMs) return cached.quote;
 
-  const html = await fetchText(`https://www.google.com/finance/quote/${encodeURIComponent(symbol)}:${exchange}?hl=zh-TW&_=${Date.now()}`, {
+  const html = await fetchText(`https://www.google.com/finance/beta/quote/${encodeURIComponent(symbol)}:${exchange}?hl=zh-TW&_=${Date.now()}`, {
     "accept": "text/html,application/xhtml+xml",
     "accept-language": "zh-TW,zh;q=0.9,en;q=0.8",
     "user-agent": "Mozilla/5.0 stock-tracker"
