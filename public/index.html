@@ -31,7 +31,7 @@
         var(--bg);
     }
 
-    button, input, select { font: inherit; }
+    button, select { font: inherit; }
 
     .shell {
       width: min(1120px, calc(100% - 32px));
@@ -56,7 +56,7 @@
 
     .subtitle {
       margin: 0;
-      max-width: 780px;
+      max-width: 820px;
       color: var(--muted);
       line-height: 1.6;
     }
@@ -70,65 +70,6 @@
       color: var(--muted);
       text-align: right;
       box-shadow: var(--shadow);
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: minmax(180px, 1fr) auto;
-      gap: 10px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    input, select {
-      width: 100%;
-      min-height: 44px;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      padding: 0 12px;
-      color: var(--ink);
-      background: #fff;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(24, 116, 93, .16);
-    }
-
-    button {
-      min-height: 44px;
-      border: 0;
-      border-radius: 7px;
-      padding: 0 16px;
-      cursor: pointer;
-      color: #fff;
-      background: var(--accent);
-      transition: transform .14s ease, opacity .14s ease;
-      white-space: nowrap;
-    }
-
-    button:hover { transform: translateY(-1px); }
-    button:disabled { cursor: default; opacity: .45; transform: none; }
-
-    button.secondary {
-      color: var(--ink);
-      border: 1px solid var(--line);
-      background: #fff;
-    }
-
-    button.icon {
-      width: 38px;
-      min-height: 38px;
-      padding: 0;
-      display: inline-grid;
-      place-items: center;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      background: #fff;
     }
 
     .toolbar {
@@ -146,14 +87,49 @@
       gap: 10px;
     }
 
+    button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 7px;
+      padding: 0 16px;
+      cursor: pointer;
+      color: #fff;
+      background: var(--accent);
+      transition: transform .14s ease, opacity .14s ease;
+      white-space: nowrap;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { cursor: default; opacity: .55; transform: none; }
+
+    button.secondary {
+      color: var(--ink);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    select {
+      min-height: 44px;
+      min-width: 140px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 0 12px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(24, 116, 93, .16);
+    }
+
     .interval {
       display: flex;
       align-items: center;
       gap: 10px;
       color: var(--muted);
     }
-
-    .interval select { min-width: 140px; }
 
     .grid {
       display: grid;
@@ -172,19 +148,9 @@
       box-shadow: var(--shadow);
     }
 
-    .stock-card.dragging {
-      opacity: .55;
-      outline: 2px dashed var(--accent);
-    }
-
     .card-head {
-      display: flex;
-      gap: 10px;
-      align-items: start;
-      justify-content: space-between;
+      min-width: 0;
     }
-
-    .title-line { min-width: 0; }
 
     .symbol {
       margin: 0;
@@ -200,12 +166,6 @@
       line-height: 1.35;
       min-height: 20px;
       overflow-wrap: anywhere;
-    }
-
-    .actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
     }
 
     .price {
@@ -251,21 +211,12 @@
       min-height: 38px;
     }
 
-    .empty {
-      grid-column: 1 / -1;
-      padding: 34px 18px;
-      border: 1px dashed var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .70);
-      color: var(--muted);
-      text-align: center;
-    }
-
     @media (max-width: 880px) {
-      header, .controls, .grid { grid-template-columns: 1fr; }
+      header, .grid { grid-template-columns: 1fr; }
       .status { text-align: left; }
       .toolbar { align-items: stretch; }
       .toolbar > *, .interval { width: 100%; }
+      .interval select { width: 100%; }
     }
   </style>
 </head>
@@ -274,15 +225,10 @@
     <header>
       <div>
         <h1>&#21363;&#26178;&#32929;&#20729;&#36861;&#36452;</h1>
-        <p class="subtitle">&#21488;&#32929;&#33287;&#32654;&#32929;&#30342;&#20351;&#29992; Google &#36001;&#32147;&#12290;&#28165;&#21934;&#33287;&#25490;&#24207;&#26371;&#20445;&#23384;&#21040;&#20849;&#29992;&#32178;&#22336;&#65292;&#20854;&#20182;&#38651;&#33126;&#38283;&#21855;&#21516;&#19968;&#32178;&#22336;&#20063;&#26371;&#30475;&#21040;&#12290;</p>
+        <p class="subtitle">&#22266;&#23450;&#36861;&#36452;&#21488;&#32929;&#33287;&#32654;&#32929;&#28165;&#21934;&#65292;&#36039;&#26009;&#20358;&#28304;&#28858; Google &#36001;&#32147;&#12290;&#24050;&#31227;&#38500;&#26032;&#22686;&#32929;&#31080;&#33287;&#20282;&#26381;&#22120;&#28165;&#21934;&#21151;&#33021;&#65307;&#35201;&#22686;&#21152;&#27161;&#30340;&#26178;&#20877;&#30452;&#25509;&#26356;&#26032;&#31243;&#24335;&#28165;&#21934;&#12290;</p>
       </div>
       <div class="status" id="status">&#27491;&#22312;&#36617;&#20837;</div>
     </header>
-
-    <form class="controls" id="addForm">
-      <input id="symbolInput" name="symbol" autocomplete="off" placeholder="&#32929;&#31080;&#20195;&#34399;&#65292;&#20363;&#22914; 0056 &#25110; VOO" required>
-      <button type="submit">&#65291; &#21152;&#20837;</button>
-    </form>
 
     <div class="toolbar">
       <div class="toolbar-buttons">
@@ -304,12 +250,8 @@
 
   <script>
     const TEXT = {
-      loading: "\u6b63\u5728\u8f09\u5165",
-      noStocks: "\u5c1a\u672a\u52a0\u5165\u80a1\u7968\uff0c\u8acb\u5148\u8f38\u5165\u53f0\u80a1\u6216\u7f8e\u80a1\u4ee3\u865f\u3002",
       updating: "\u66f4\u65b0\u4e2d...",
       lastUpdate: "\u4e0a\u6b21\u66f4\u65b0",
-      sharedSaved: "\u5171\u7528\u6e05\u55ae\u5df2\u5132\u5b58",
-      localOnly: "\u7121\u6cd5\u540c\u6b65\u5171\u7528\u6e05\u55ae\uff0c\u5df2\u6682\u5b58\u5728\u672c\u6a5f",
       loadingQuote: "\u66f4\u65b0\u4e2d",
       quote: "\u5373\u6642\u884c\u60c5",
       dash: "\u2014",
@@ -317,34 +259,27 @@
       change: "\u6f32\u8dcc",
       openClose: "\u958b\u76e4 / \u6628\u6536",
       highLow: "\u6700\u9ad8 / \u6700\u4f4e",
+      sourceNote: "\u512a\u5148\u53d6 Google \u8ca1\u7d93\u9801\u9762\u9802\u90e8\u986f\u793a\u5831\u50f9",
       exportHeaders: ["\u6392\u5e8f", "\u4ee3\u865f", "\u540d\u7a31", "\u5e02\u5834", "\u8cc7\u6599\u4f86\u6e90", "\u50f9\u683c", "\u6f32\u8dcc", "\u6f32\u8dcc\u5e45", "\u884c\u60c5\u6642\u9593", "\u958b\u76e4", "\u6628\u6536", "\u6700\u9ad8", "\u6700\u4f4e", "\u6210\u4ea4\u91cf", "\u72c0\u614b"]
     };
 
-    const storageKey = "stock-tracker-shared-fallback-v1";
-    const intervalKey = "stock-tracker-interval-v4";
-    const fixedSymbols = [
-      "00662",
-      "00646",
-      "0050",
-      "006208",
-      "00692",
-      "0056",
-      "00878",
-      "00850",
-      "00713",
-      "VT",
-      "VOO",
-      "VTI",
-      "BND"
+    const intervalKey = "stock-tracker-interval-v5";
+    const stocks = [
+      { symbol: "00662", quote: null, error: "" },
+      { symbol: "00646", quote: null, error: "" },
+      { symbol: "0050", quote: null, error: "" },
+      { symbol: "006208", quote: null, error: "" },
+      { symbol: "00692", quote: null, error: "" },
+      { symbol: "0056", quote: null, error: "" },
+      { symbol: "00878", quote: null, error: "" },
+      { symbol: "00850", quote: null, error: "" },
+      { symbol: "00713", quote: null, error: "" },
+      { symbol: "VT", quote: null, error: "" },
+      { symbol: "VOO", quote: null, error: "" },
+      { symbol: "VTI", quote: null, error: "" },
+      { symbol: "BND", quote: null, error: "" }
     ];
-    const fixedSymbolSet = new Set(fixedSymbols);
-    const state = {
-      stocks: [],
-      timer: null,
-      loading: false,
-      draggedSymbol: "",
-      sharedReady: false
-    };
+    const state = { loading: false, timer: null };
 
     const $ = (selector) => document.querySelector(selector);
     const grid = $("#stockGrid");
@@ -355,69 +290,6 @@
       return location.protocol === "file:" ? `http://127.0.0.1:8787${path}` : path;
     }
 
-    function normalizeSymbol(raw) {
-      return raw.trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
-    }
-
-    function setStocks(items) {
-      const seen = new Set();
-      state.stocks = [...fixedSymbols, ...(Array.isArray(items) ? items : [])]
-        .map((item) => ({ symbol: normalizeSymbol(item.symbol || item), quote: null, error: "" }))
-        .filter((item) => {
-          if (!item.symbol || seen.has(item.symbol)) return false;
-          seen.add(item.symbol);
-          return true;
-        });
-    }
-
-    function stockPayload() {
-      return state.stocks.map((stock) => ({ symbol: stock.symbol }));
-    }
-
-    function readLocalFallback() {
-      try {
-        return JSON.parse(localStorage.getItem(storageKey) || "[]");
-      } catch {
-        return [];
-      }
-    }
-
-    function saveLocalFallback() {
-      localStorage.setItem(storageKey, JSON.stringify(stockPayload()));
-    }
-
-    async function loadWatchlist() {
-      try {
-        const response = await fetch(apiPath("/api/watchlist"), { cache: "no-store" });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || response.status);
-        setStocks([...(payload.stocks || []), ...readLocalFallback()]);
-        state.sharedReady = true;
-        saveLocalFallback();
-      } catch {
-        setStocks(readLocalFallback());
-        state.sharedReady = false;
-        status.textContent = TEXT.localOnly;
-      }
-    }
-
-    async function saveWatchlist() {
-      saveLocalFallback();
-      try {
-        const response = await fetch(apiPath("/api/watchlist"), {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ stocks: stockPayload() })
-        });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || response.status);
-        state.sharedReady = true;
-      } catch {
-        state.sharedReady = false;
-        status.textContent = TEXT.localOnly;
-      }
-    }
-
     function formatNumber(value, digits = 2) {
       if (value === null || value === undefined || Number.isNaN(Number(value))) return TEXT.dash;
       return new Intl.NumberFormat("zh-TW", {
@@ -426,43 +298,15 @@
       }).format(Number(value));
     }
 
-    function formatDateTime(value) {
-      return value || TEXT.dash;
-    }
-
     async function getQuote(symbol) {
-      const response = await fetch(apiPath(`/api/quote?symbol=${encodeURIComponent(symbol)}`), { cache: "no-store" });
+      const response = await fetch(apiPath(`/api/quote?symbol=${encodeURIComponent(symbol)}&t=${Date.now()}`), { cache: "no-store" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
       return payload;
     }
 
-    async function moveStock(symbol, direction) {
-      const index = state.stocks.findIndex((stock) => stock.symbol === symbol);
-      const target = index + direction;
-      if (index < 0 || target < 0 || target >= state.stocks.length) return;
-      const [item] = state.stocks.splice(index, 1);
-      state.stocks.splice(target, 0, item);
-      render();
-      await saveWatchlist();
-    }
-
-    function moveDragged(beforeSymbol) {
-      const from = state.stocks.findIndex((stock) => stock.symbol === state.draggedSymbol);
-      const to = state.stocks.findIndex((stock) => stock.symbol === beforeSymbol);
-      if (from < 0 || to < 0 || from === to) return;
-      const [item] = state.stocks.splice(from, 1);
-      state.stocks.splice(to, 0, item);
-      render();
-    }
-
     function render() {
-      if (!state.stocks.length) {
-        grid.innerHTML = `<div class="empty">${TEXT.noStocks}</div>`;
-        return;
-      }
-
-      grid.innerHTML = state.stocks.map((stock, index) => {
+      grid.innerHTML = stocks.map((stock, index) => {
         const quote = stock.quote;
         const changeClass = quote?.change > 0 ? "up" : quote?.change < 0 ? "down" : "";
         const sign = quote?.change > 0 ? "+" : "";
@@ -471,38 +315,31 @@
           : `${sign}${formatNumber(quote.change)} (${sign}${formatNumber(quote.changePercent)}%)`;
 
         return `
-          <article class="stock-card" draggable="true" data-symbol="${stock.symbol}">
+          <article class="stock-card" data-symbol="${stock.symbol}">
             <div class="card-head">
-              <div class="title-line">
-                <h2 class="symbol">${stock.symbol}</h2>
-                <div class="name">${quote?.displayName || TEXT.quote}</div>
-              </div>
-              <div class="actions">
-                <button class="icon" type="button" title="Move up" data-up="${stock.symbol}" ${index === 0 ? "disabled" : ""}>↑</button>
-                <button class="icon" type="button" title="Move down" data-down="${stock.symbol}" ${index === state.stocks.length - 1 ? "disabled" : ""}>↓</button>
-                <button class="icon" type="button" title="Remove" data-remove="${stock.symbol}" ${fixedSymbolSet.has(stock.symbol) ? "disabled" : ""}>×</button>
-              </div>
+              <h2 class="symbol">${index + 1}. ${stock.symbol}</h2>
+              <div class="name">${quote?.displayName || TEXT.quote}</div>
             </div>
             <div class="price">${quote ? formatNumber(quote.price) : TEXT.loadingQuote}</div>
             <div class="meta">
               <div class="metric"><span>${TEXT.change}</span><strong class="change ${changeClass}">${changeText}</strong></div>
-              <div class="metric"><span>${TEXT.marketTime}</span><strong>${quote ? formatDateTime(quote.quoteTime) : TEXT.dash}</strong></div>
+              <div class="metric"><span>${TEXT.marketTime}</span><strong>${quote?.quoteTime || TEXT.dash}</strong></div>
               <div class="metric"><span>${TEXT.openClose}</span><strong>${quote ? `${formatNumber(quote.open)} / ${formatNumber(quote.previousClose)}` : TEXT.dash}</strong></div>
               <div class="metric"><span>${TEXT.highLow}</span><strong>${quote ? `${formatNumber(quote.high)} / ${formatNumber(quote.low)}` : TEXT.dash}</strong></div>
             </div>
-            <div class="message">${stock.error || quote?.note || ""}</div>
+            <div class="message">${stock.error || quote?.note || TEXT.sourceNote}</div>
           </article>
         `;
       }).join("");
     }
 
     async function refreshAll() {
-      if (state.loading || !state.stocks.length) return;
+      if (state.loading) return;
       state.loading = true;
       status.textContent = TEXT.updating;
       render();
 
-      await Promise.all(state.stocks.map(async (stock) => {
+      await Promise.all(stocks.map(async (stock) => {
         try {
           stock.quote = await getQuote(stock.symbol);
           stock.error = "";
@@ -538,7 +375,7 @@
     }
 
     function exportExcel() {
-      const rows = state.stocks.map((stock, index) => {
+      const rows = stocks.map((stock, index) => {
         const quote = stock.quote || {};
         return [
           index + 1,
@@ -574,72 +411,13 @@
       URL.revokeObjectURL(link.href);
     }
 
-    $("#addForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const symbol = normalizeSymbol($("#symbolInput").value);
-      if (!symbol) return;
-      if (!state.stocks.some((stock) => stock.symbol === symbol)) {
-        state.stocks.push({ symbol, quote: null, error: "" });
-      }
-      $("#symbolInput").value = "";
-      render();
-      await saveWatchlist();
-      await refreshAll();
-    });
-
     $("#refreshButton").addEventListener("click", refreshAll);
     $("#exportButton").addEventListener("click", exportExcel);
-
-    grid.addEventListener("click", async (event) => {
-      const removeButton = event.target.closest("[data-remove]");
-      const upButton = event.target.closest("[data-up]");
-      const downButton = event.target.closest("[data-down]");
-
-      if (removeButton) {
-        if (fixedSymbolSet.has(removeButton.dataset.remove)) return;
-        state.stocks = state.stocks.filter((stock) => stock.symbol !== removeButton.dataset.remove);
-        render();
-        await saveWatchlist();
-      }
-
-      if (upButton) await moveStock(upButton.dataset.up, -1);
-      if (downButton) await moveStock(downButton.dataset.down, 1);
-    });
-
-    grid.addEventListener("dragstart", (event) => {
-      const card = event.target.closest(".stock-card");
-      if (!card) return;
-      state.draggedSymbol = card.dataset.symbol;
-      card.classList.add("dragging");
-      event.dataTransfer.effectAllowed = "move";
-    });
-
-    grid.addEventListener("dragend", async (event) => {
-      const card = event.target.closest(".stock-card");
-      if (card) card.classList.remove("dragging");
-      state.draggedSymbol = "";
-      await saveWatchlist();
-    });
-
-    grid.addEventListener("dragover", (event) => {
-      const card = event.target.closest(".stock-card");
-      if (!card || !state.draggedSymbol || card.dataset.symbol === state.draggedSymbol) return;
-      event.preventDefault();
-      moveDragged(card.dataset.symbol);
-    });
-
-    async function init() {
-      const savedInterval = localStorage.getItem(intervalKey);
-      intervalSelect.value = savedInterval === "20000" ? "20000" : "10000";
-      intervalSelect.addEventListener("change", setIntervalTimer);
-      await loadWatchlist();
-      setIntervalTimer();
-      render();
-      await refreshAll();
-      if (!state.stocks.length) status.textContent = state.sharedReady ? TEXT.sharedSaved : TEXT.localOnly;
-    }
-
-    init();
+    intervalSelect.value = localStorage.getItem(intervalKey) === "20000" ? "20000" : "10000";
+    intervalSelect.addEventListener("change", setIntervalTimer);
+    setIntervalTimer();
+    render();
+    refreshAll();
   </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const cacheMs = 8_000;
+const cacheMs = 0;
 const googleCache = new Map();
 
 const TEXT = {
@@ -55,7 +55,7 @@ function formatExchangeTime(parts) {
 }
 
 async function fetchText(url, headers) {
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, { cache: "no-store", headers });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.text();
 }
@@ -123,6 +123,12 @@ function parseGoogleQuote(symbol, exchange, html, market) {
   }
 
   const displayName = stripTitle(symbol, rawTitle) || symbol;
+  try {
+    return parseGoogleSummary(symbol, exchange, html, displayName, market);
+  } catch {
+    // Fall back to embedded chart rows only when the visible quote block is not available.
+  }
+
   const rowPattern = /\[\[(\d{4}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2}),null,null,\[(-?\d+)\]\],\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),2,2,3\],(\d+)\]/g;
   const rows = [...html.matchAll(rowPattern)];
 
@@ -160,9 +166,9 @@ async function fetchGoogleQuoteForExchange(symbol, exchange, market) {
   const cacheKey = `${symbol}:${exchange}`;
   const cached = googleCache.get(cacheKey);
   const now = Date.now();
-  if (cached && now - cached.at < cacheMs) return cached.quote;
+  if (cacheMs > 0 && cached && now - cached.at < cacheMs) return cached.quote;
 
-  const html = await fetchText(`https://www.google.com/finance/quote/${encodeURIComponent(symbol)}:${exchange}?hl=zh-TW`, {
+  const html = await fetchText(`https://www.google.com/finance/quote/${encodeURIComponent(symbol)}:${exchange}?hl=zh-TW&_=${Date.now()}`, {
     "accept": "text/html,application/xhtml+xml",
     "accept-language": "zh-TW,zh;q=0.9,en;q=0.8",
     "user-agent": "Mozilla/5.0 stock-tracker"
