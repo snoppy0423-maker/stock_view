@@ -229,17 +229,22 @@
 
     .toast {
       position: fixed;
-      right: 18px;
-      bottom: 18px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
       z-index: 10;
-      max-width: min(520px, calc(100vw - 36px));
-      padding: 14px 16px;
+      max-width: min(720px, calc(100vw - 36px));
+      padding: 22px 24px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fff;
       color: var(--ink);
       box-shadow: var(--shadow);
-      line-height: 1.45;
+      font-size: 20px;
+      font-weight: 650;
+      line-height: 1.55;
+      text-align: center;
+      white-space: pre-line;
     }
 
     .toast[hidden] {
@@ -266,7 +271,7 @@
 
     <form class="controls" id="addForm">
       <input id="symbolInput" name="symbol" autocomplete="off" placeholder="&#36664;&#20837;&#32929;&#31080;&#20195;&#34399;&#65292;&#20363;&#22914; AAPL, MSFT, 2330&#65292;&#21487;&#26032;&#22686;&#25110;&#21034;&#38500;">
-      <button type="submit">&#65291; &#26032;&#22686;</button>
+      <button type="submit">&#26032;&#22686;</button>
       <button class="danger" id="deleteButton" type="button">&#21034;&#38500;</button>
     </form>
 
@@ -294,6 +299,9 @@
       noDeleteTarget: "\u7121\u6307\u5b9a\u80a1\u7968\u80fd\u522a\u9664",
       deletedLabel: "\u5df2\u522a\u9664\u7684\u80a1\u7968\u4ee3\u78bc",
       notFoundLabel: "\u4e0d\u80fd\u522a\u9664\u7684\u80a1\u7968\u4ee3\u78bc",
+      addedLabel: "\u80a1\u7968\u4ee3\u78bc\u5df2\u65b0\u589e",
+      duplicateLabel: "\u6e05\u55ae\u5167\u5df2\u6709\u4e0d\u5f97\u65b0\u589e",
+      notFoundAddLabel: "\u641c\u5c0b\u4e0d\u5230\u6a19\u7684",
       exportHeaders: ["\u6392\u5e8f", "\u4ee3\u865f", "\u540d\u7a31", "\u5e02\u5834", "\u8cc7\u6599\u4f86\u6e90", "\u50f9\u683c", "\u6f32\u8dcc", "\u6f32\u8dcc\u5e45", "\u884c\u60c5\u6642\u9593", "\u6210\u4ea4\u91cf", "\u72c0\u614b"]
     };
 
@@ -372,7 +380,7 @@
       toast.hidden = false;
       state.toastTimer = window.setTimeout(() => {
         toast.hidden = true;
-      }, 5000);
+      }, 8000);
     }
 
     function parseSymbols(raw) {
@@ -404,7 +412,7 @@
       localStorage.setItem(customStorageKey, JSON.stringify(customSymbols));
     }
 
-    function addSymbols(raw) {
+    function addStoredSymbols(raw) {
       const symbols = parseSymbols(raw);
       const existing = new Set(stocks.map((stock) => stock.symbol));
       const removed = new Set(readRemovedDefaultSymbols());
@@ -421,6 +429,42 @@
       writeRemovedDefaultSymbols([...removed]);
       if (added) saveCustomSymbols();
       return added;
+    }
+
+    async function addSymbols(raw) {
+      const symbols = parseSymbols(raw);
+      const existing = new Set(stocks.map((stock) => stock.symbol));
+      const added = [];
+      const duplicates = [];
+      const notFound = [];
+      const removed = new Set(readRemovedDefaultSymbols());
+
+      for (const symbol of symbols) {
+        if (existing.has(symbol)) {
+          duplicates.push(symbol);
+          continue;
+        }
+
+        try {
+          const quote = await getQuote(symbol);
+          stocks.push({ symbol, quote, error: "" });
+          existing.add(symbol);
+          removed.delete(symbol);
+          added.push(symbol);
+        } catch {
+          notFound.push(symbol);
+        }
+      }
+
+      writeRemovedDefaultSymbols([...removed]);
+      if (added.length) saveCustomSymbols();
+
+      const messages = [];
+      if (added.length) messages.push(`${TEXT.addedLabel}: ${added.join(", ")}`);
+      if (duplicates.length) messages.push(`${TEXT.duplicateLabel}: ${duplicates.join(", ")}`);
+      if (notFound.length) messages.push(`${TEXT.notFoundAddLabel}: ${notFound.join(", ")}`);
+      if (messages.length) showToast(messages.join("\n"));
+      return added.length > 0;
     }
 
     function deleteSymbols(raw) {
@@ -559,10 +603,9 @@
     $("#addForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const input = $("#symbolInput");
-      if (addSymbols(input.value)) {
+      if (await addSymbols(input.value)) {
         input.value = "";
         render();
-        await refreshAll();
       }
     });
     $("#deleteButton").addEventListener("click", () => {
