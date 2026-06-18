@@ -31,7 +31,7 @@
         var(--bg);
     }
 
-    button, select { font: inherit; }
+    button, input { font: inherit; }
 
     .shell {
       width: min(1120px, calc(100% - 32px));
@@ -72,6 +72,7 @@
       box-shadow: var(--shadow);
     }
 
+    .controls,
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -79,6 +80,14 @@
       align-items: center;
       justify-content: space-between;
       margin: 16px 0;
+    }
+
+    .controls {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
     }
 
     .toolbar-buttons {
@@ -108,9 +117,9 @@
       background: #fff;
     }
 
-    select {
+    input {
       min-height: 44px;
-      min-width: 140px;
+      flex: 1 1 360px;
       border: 1px solid var(--line);
       border-radius: 7px;
       padding: 0 12px;
@@ -119,16 +128,9 @@
       outline: none;
     }
 
-    select:focus {
+    input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(24, 116, 93, .16);
-    }
-
-    .interval {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
     }
 
     .grid {
@@ -215,8 +217,7 @@
       header, .grid { grid-template-columns: 1fr; }
       .status { text-align: left; }
       .toolbar { align-items: stretch; }
-      .toolbar > *, .interval { width: 100%; }
-      .interval select { width: 100%; }
+      .toolbar > *, .controls > * { width: 100%; }
     }
   </style>
 </head>
@@ -225,24 +226,21 @@
     <header>
       <div>
         <h1>&#21363;&#26178;&#32929;&#20729;&#36861;&#36452;</h1>
-        <p class="subtitle">&#22266;&#23450;&#36861;&#36452;&#21488;&#32929;&#33287;&#32654;&#32929;&#28165;&#21934;&#65292;&#36039;&#26009;&#20358;&#28304;&#28858; Google &#36001;&#32147;&#12290;&#24050;&#31227;&#38500;&#26032;&#22686;&#32929;&#31080;&#33287;&#20282;&#26381;&#22120;&#28165;&#21934;&#21151;&#33021;&#65307;&#35201;&#22686;&#21152;&#27161;&#30340;&#26178;&#20877;&#30452;&#25509;&#26356;&#26032;&#31243;&#24335;&#28165;&#21934;&#12290;</p>
+        <p class="subtitle">&#22266;&#23450;&#36861;&#36452;&#21488;&#32929;&#33287;&#32654;&#32929;&#28165;&#21934;&#65292;&#36039;&#26009;&#20358;&#28304;&#28858; Google &#36001;&#32147;&#12290;&#21487;&#29992;&#36887;&#34399;&#19968;&#27425;&#26032;&#22686;&#22810;&#31558;&#27161;&#30340;&#65292;&#26032;&#22686;&#38917;&#30446;&#26371;&#25509;&#22312;&#21407;&#26412; 13 &#27284;&#24460;&#38754;&#12290;</p>
       </div>
       <div class="status" id="status">&#27491;&#22312;&#36617;&#20837;</div>
     </header>
+
+    <form class="controls" id="addForm">
+      <input id="symbolInput" name="symbol" autocomplete="off" placeholder="&#26032;&#22686;&#21040;&#22266;&#23450;&#28165;&#21934;&#65292;&#20363;&#22914; AAPL, MSFT, 2330">
+      <button type="submit">&#65291; &#26032;&#22686;</button>
+    </form>
 
     <div class="toolbar">
       <div class="toolbar-buttons">
         <button id="refreshButton" type="button">&#8635; &#31435;&#21363;&#26356;&#26032;</button>
         <button class="secondary" id="exportButton" type="button">&#21295;&#20986; Excel</button>
       </div>
-      <label class="interval">
-        &#33258;&#21205;&#26356;&#26032;
-        <select id="intervalSelect">
-          <option value="0">&#38364;&#38281;</option>
-          <option value="10000">&#27599; 10 &#31186;</option>
-          <option value="20000">&#27599; 20 &#31186;</option>
-        </select>
-      </label>
     </div>
 
     <section class="grid" id="stockGrid" aria-live="polite"></section>
@@ -263,28 +261,29 @@
       exportHeaders: ["\u6392\u5e8f", "\u4ee3\u865f", "\u540d\u7a31", "\u5e02\u5834", "\u8cc7\u6599\u4f86\u6e90", "\u50f9\u683c", "\u6f32\u8dcc", "\u6f32\u8dcc\u5e45", "\u884c\u60c5\u6642\u9593", "\u958b\u76e4", "\u6628\u6536", "\u6700\u9ad8", "\u6700\u4f4e", "\u6210\u4ea4\u91cf", "\u72c0\u614b"]
     };
 
-    const intervalKey = "stock-tracker-interval-v5";
-    const stocks = [
-      { symbol: "00662", quote: null, error: "" },
-      { symbol: "00646", quote: null, error: "" },
-      { symbol: "0050", quote: null, error: "" },
-      { symbol: "006208", quote: null, error: "" },
-      { symbol: "00692", quote: null, error: "" },
-      { symbol: "0056", quote: null, error: "" },
-      { symbol: "00878", quote: null, error: "" },
-      { symbol: "00850", quote: null, error: "" },
-      { symbol: "00713", quote: null, error: "" },
-      { symbol: "VT", quote: null, error: "" },
-      { symbol: "VOO", quote: null, error: "" },
-      { symbol: "VTI", quote: null, error: "" },
-      { symbol: "BND", quote: null, error: "" }
+    const customStorageKey = "stock-tracker-custom-symbols-v1";
+    const defaultSymbols = [
+      "00662",
+      "00646",
+      "0050",
+      "006208",
+      "00692",
+      "0056",
+      "00878",
+      "00850",
+      "00713",
+      "VT",
+      "VOO",
+      "VTI",
+      "BND"
     ];
-    const state = { loading: false, timer: null };
+    const defaultSymbolSet = new Set(defaultSymbols);
+    const stocks = defaultSymbols.map((symbol) => ({ symbol, quote: null, error: "" }));
+    const state = { loading: false };
 
     const $ = (selector) => document.querySelector(selector);
     const grid = $("#stockGrid");
     const status = $("#status");
-    const intervalSelect = $("#intervalSelect");
 
     function apiPath(path) {
       return location.protocol === "file:" ? `http://127.0.0.1:8787${path}` : path;
@@ -305,6 +304,44 @@
       return payload;
     }
 
+    function normalizeSymbol(raw) {
+      return String(raw || "").trim().toUpperCase().replace(/[^A-Z0-9.-]/g, "");
+    }
+
+    function readCustomSymbols() {
+      try {
+        return JSON.parse(localStorage.getItem(customStorageKey) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCustomSymbols() {
+      const customSymbols = stocks
+        .map((stock) => stock.symbol)
+        .filter((symbol) => !defaultSymbolSet.has(symbol));
+      localStorage.setItem(customStorageKey, JSON.stringify(customSymbols));
+    }
+
+    function addSymbols(raw) {
+      const symbols = raw
+        .split(",")
+        .map(normalizeSymbol)
+        .filter(Boolean);
+      const existing = new Set(stocks.map((stock) => stock.symbol));
+      let added = false;
+
+      for (const symbol of symbols) {
+        if (existing.has(symbol)) continue;
+        stocks.push({ symbol, quote: null, error: "" });
+        existing.add(symbol);
+        added = true;
+      }
+
+      if (added) saveCustomSymbols();
+      return added;
+    }
+
     function render() {
       grid.innerHTML = stocks.map((stock, index) => {
         const quote = stock.quote;
@@ -317,7 +354,7 @@
         return `
           <article class="stock-card" data-symbol="${stock.symbol}">
             <div class="card-head">
-              <h2 class="symbol">${index + 1}. ${stock.symbol}</h2>
+              <h2 class="symbol">${stock.symbol}</h2>
               <div class="name">${quote?.displayName || TEXT.quote}</div>
             </div>
             <div class="price">${quote ? formatNumber(quote.price) : TEXT.loadingQuote}</div>
@@ -357,13 +394,6 @@
         second: "2-digit"
       }).format(new Date())}`;
       render();
-    }
-
-    function setIntervalTimer() {
-      if (state.timer) window.clearInterval(state.timer);
-      const ms = Number(intervalSelect.value);
-      localStorage.setItem(intervalKey, String(ms));
-      if (ms > 0) state.timer = window.setInterval(refreshAll, ms);
     }
 
     function escapeCell(value) {
@@ -413,9 +443,16 @@
 
     $("#refreshButton").addEventListener("click", refreshAll);
     $("#exportButton").addEventListener("click", exportExcel);
-    intervalSelect.value = localStorage.getItem(intervalKey) === "20000" ? "20000" : "10000";
-    intervalSelect.addEventListener("change", setIntervalTimer);
-    setIntervalTimer();
+    $("#addForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = $("#symbolInput");
+      if (addSymbols(input.value)) {
+        input.value = "";
+        render();
+        await refreshAll();
+      }
+    });
+    addSymbols(readCustomSymbols().join(","));
     render();
     refreshAll();
   </script>
