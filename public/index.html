@@ -117,6 +117,10 @@
       background: #fff;
     }
 
+    button.danger {
+      background: var(--danger);
+    }
+
     input {
       min-height: 44px;
       flex: 1 1 360px;
@@ -159,6 +163,16 @@
       font-size: 22px;
       letter-spacing: 0;
       overflow-wrap: anywhere;
+    }
+
+    .symbol a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .symbol a:hover {
+      color: var(--accent);
+      text-decoration: underline;
     }
 
     .name {
@@ -213,6 +227,25 @@
       min-height: 38px;
     }
 
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 10;
+      max-width: min(520px, calc(100vw - 36px));
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: var(--shadow);
+      line-height: 1.45;
+    }
+
+    .toast[hidden] {
+      display: none;
+    }
+
     @media (max-width: 880px) {
       header, .grid { grid-template-columns: 1fr; }
       .status { text-align: left; }
@@ -232,8 +265,9 @@
     </header>
 
     <form class="controls" id="addForm">
-      <input id="symbolInput" name="symbol" autocomplete="off" placeholder="&#26032;&#22686;&#21040;&#22266;&#23450;&#28165;&#21934;&#65292;&#20363;&#22914; AAPL, MSFT, 2330">
+      <input id="symbolInput" name="symbol" autocomplete="off" placeholder="&#36664;&#20837;&#32929;&#31080;&#20195;&#34399;&#65292;&#20363;&#22914; AAPL, MSFT, 2330&#65292;&#21487;&#26032;&#22686;&#25110;&#21034;&#38500;">
       <button type="submit">&#65291; &#26032;&#22686;</button>
+      <button class="danger" id="deleteButton" type="button">&#21034;&#38500;</button>
     </form>
 
     <div class="toolbar">
@@ -244,6 +278,7 @@
     </div>
 
     <section class="grid" id="stockGrid" aria-live="polite"></section>
+    <div class="toast" id="toast" hidden></div>
   </main>
 
   <script>
@@ -255,13 +290,15 @@
       dash: "\u2014",
       marketTime: "\u884c\u60c5\u6642\u9593",
       change: "\u6f32\u8dcc",
-      openClose: "\u958b\u76e4 / \u6628\u6536",
-      highLow: "\u6700\u9ad8 / \u6700\u4f4e",
       sourceNote: "\u512a\u5148\u53d6 Google \u8ca1\u7d93\u9801\u9762\u9802\u90e8\u986f\u793a\u5831\u50f9",
-      exportHeaders: ["\u6392\u5e8f", "\u4ee3\u865f", "\u540d\u7a31", "\u5e02\u5834", "\u8cc7\u6599\u4f86\u6e90", "\u50f9\u683c", "\u6f32\u8dcc", "\u6f32\u8dcc\u5e45", "\u884c\u60c5\u6642\u9593", "\u958b\u76e4", "\u6628\u6536", "\u6700\u9ad8", "\u6700\u4f4e", "\u6210\u4ea4\u91cf", "\u72c0\u614b"]
+      noDeleteTarget: "\u7121\u6307\u5b9a\u80a1\u7968\u80fd\u522a\u9664",
+      deletedLabel: "\u5df2\u522a\u9664\u7684\u80a1\u7968\u4ee3\u78bc",
+      notFoundLabel: "\u4e0d\u80fd\u522a\u9664\u7684\u80a1\u7968\u4ee3\u78bc",
+      exportHeaders: ["\u6392\u5e8f", "\u4ee3\u865f", "\u540d\u7a31", "\u5e02\u5834", "\u8cc7\u6599\u4f86\u6e90", "\u50f9\u683c", "\u6f32\u8dcc", "\u6f32\u8dcc\u5e45", "\u884c\u60c5\u6642\u9593", "\u6210\u4ea4\u91cf", "\u72c0\u614b"]
     };
 
     const customStorageKey = "stock-tracker-custom-symbols-v1";
+    const removedDefaultStorageKey = "stock-tracker-removed-default-symbols-v1";
     const defaultSymbols = [
       "00662",
       "00646",
@@ -278,12 +315,13 @@
       "BND"
     ];
     const defaultSymbolSet = new Set(defaultSymbols);
-    const stocks = defaultSymbols.map((symbol) => ({ symbol, quote: null, error: "" }));
-    const state = { loading: false };
+    const stocks = [];
+    const state = { loading: false, toastTimer: null };
 
     const $ = (selector) => document.querySelector(selector);
     const grid = $("#stockGrid");
     const status = $("#status");
+    const toast = $("#toast");
 
     function apiPath(path) {
       return location.protocol === "file:" ? `http://127.0.0.1:8787${path}` : path;
@@ -316,6 +354,49 @@
       }
     }
 
+    function readRemovedDefaultSymbols() {
+      try {
+        return JSON.parse(localStorage.getItem(removedDefaultStorageKey) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function writeRemovedDefaultSymbols(symbols) {
+      localStorage.setItem(removedDefaultStorageKey, JSON.stringify([...new Set(symbols)]));
+    }
+
+    function showToast(message) {
+      if (state.toastTimer) window.clearTimeout(state.toastTimer);
+      toast.textContent = message;
+      toast.hidden = false;
+      state.toastTimer = window.setTimeout(() => {
+        toast.hidden = true;
+      }, 5000);
+    }
+
+    function parseSymbols(raw) {
+      return [...new Set(String(raw || "")
+        .split(",")
+        .map(normalizeSymbol)
+        .filter(Boolean))];
+    }
+
+    function loadStoredSymbols() {
+      const removed = new Set(readRemovedDefaultSymbols());
+      const symbols = [
+        ...defaultSymbols.filter((symbol) => !removed.has(symbol)),
+        ...readCustomSymbols()
+      ];
+      const seen = new Set();
+      stocks.splice(0, stocks.length);
+      for (const symbol of symbols) {
+        if (seen.has(symbol)) continue;
+        stocks.push({ symbol, quote: null, error: "" });
+        seen.add(symbol);
+      }
+    }
+
     function saveCustomSymbols() {
       const customSymbols = stocks
         .map((stock) => stock.symbol)
@@ -324,22 +405,60 @@
     }
 
     function addSymbols(raw) {
-      const symbols = raw
-        .split(",")
-        .map(normalizeSymbol)
-        .filter(Boolean);
+      const symbols = parseSymbols(raw);
       const existing = new Set(stocks.map((stock) => stock.symbol));
+      const removed = new Set(readRemovedDefaultSymbols());
       let added = false;
 
       for (const symbol of symbols) {
         if (existing.has(symbol)) continue;
         stocks.push({ symbol, quote: null, error: "" });
         existing.add(symbol);
+        removed.delete(symbol);
         added = true;
       }
 
+      writeRemovedDefaultSymbols([...removed]);
       if (added) saveCustomSymbols();
       return added;
+    }
+
+    function deleteSymbols(raw) {
+      const symbols = parseSymbols(raw);
+      const deleted = [];
+      const missing = [];
+      const removed = new Set(readRemovedDefaultSymbols());
+
+      for (const symbol of symbols) {
+        const index = stocks.findIndex((stock) => stock.symbol === symbol);
+        if (index < 0) {
+          missing.push(symbol);
+          continue;
+        }
+        stocks.splice(index, 1);
+        if (defaultSymbolSet.has(symbol)) removed.add(symbol);
+        deleted.push(symbol);
+      }
+
+      if (!deleted.length) {
+        showToast(TEXT.noDeleteTarget);
+      } else if (missing.length) {
+        showToast(`${TEXT.deletedLabel}: ${deleted.join(", ")}; ${TEXT.notFoundLabel}: ${missing.join(", ")}`);
+      } else {
+        showToast(`${TEXT.deletedLabel}: ${deleted.join(", ")}`);
+      }
+
+      writeRemovedDefaultSymbols([...removed]);
+      saveCustomSymbols();
+      render();
+    }
+
+    function googleFinanceUrl(stock) {
+      const exchange = stock.quote?.exchange || (/^\d{4,6}[A-Z]?$/.test(stock.symbol) ? "TPE" : "");
+      if (exchange) {
+        return `https://www.google.com/finance/beta/quote/${encodeURIComponent(stock.symbol)}:${exchange}?hl=zh-TW`;
+      }
+      return `https://www.google.com/finance/beta/search?q=${encodeURIComponent(stock.symbol)}&hl=zh-TW`;
     }
 
     function render() {
@@ -354,15 +473,13 @@
         return `
           <article class="stock-card" data-symbol="${stock.symbol}">
             <div class="card-head">
-              <h2 class="symbol">${stock.symbol}</h2>
+              <h2 class="symbol"><a href="${googleFinanceUrl(stock)}" target="_blank" rel="noopener noreferrer">${stock.symbol}</a></h2>
               <div class="name">${quote?.displayName || TEXT.quote}</div>
             </div>
             <div class="price">${quote ? formatNumber(quote.price) : TEXT.loadingQuote}</div>
             <div class="meta">
               <div class="metric"><span>${TEXT.change}</span><strong class="change ${changeClass}">${changeText}</strong></div>
               <div class="metric"><span>${TEXT.marketTime}</span><strong>${quote?.quoteTime || TEXT.dash}</strong></div>
-              <div class="metric"><span>${TEXT.openClose}</span><strong>${quote ? `${formatNumber(quote.open)} / ${formatNumber(quote.previousClose)}` : TEXT.dash}</strong></div>
-              <div class="metric"><span>${TEXT.highLow}</span><strong>${quote ? `${formatNumber(quote.high)} / ${formatNumber(quote.low)}` : TEXT.dash}</strong></div>
             </div>
             <div class="message">${stock.error || quote?.note || TEXT.sourceNote}</div>
           </article>
@@ -417,10 +534,6 @@
           quote.change ?? "",
           quote.changePercent ?? "",
           quote.quoteTime || "",
-          quote.open ?? "",
-          quote.previousClose ?? "",
-          quote.high ?? "",
-          quote.low ?? "",
           quote.volume ?? "",
           stock.error || "OK"
         ];
@@ -452,7 +565,12 @@
         await refreshAll();
       }
     });
-    addSymbols(readCustomSymbols().join(","));
+    $("#deleteButton").addEventListener("click", () => {
+      const input = $("#symbolInput");
+      deleteSymbols(input.value);
+      input.value = "";
+    });
+    loadStoredSymbols();
     render();
     refreshAll();
   </script>

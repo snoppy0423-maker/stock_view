@@ -64,6 +64,7 @@ function makeQuote({ symbol, exchange, market, displayName, price, change, chang
   const marketLabel = market === "TW" ? TEXT.tw : TEXT.us;
   return {
     provider: TEXT.provider,
+    exchange,
     displayName: `${displayName || symbol} / ${marketLabel}`,
     market,
     price,
